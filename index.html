@@ -135,7 +135,6 @@
 
     .wave-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
     
-    /* Lienzo global que abarca toda la pantalla tanto en Móviles como en PC */
     .pc-outer-canvas {
       position: fixed;
       top: 0; left: 0;
@@ -257,7 +256,6 @@
 
   <div class="panel-backdrop" id="panelBackdrop"></div>
 
-  <!-- Lienzo Global Exterior (Funciona en Móviles y PC) -->
   <canvas id="outerWaveCanvas" class="pc-outer-canvas"></canvas>
 
   <div class="app-wrapper">
@@ -652,7 +650,6 @@
       waveCanvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
 
-      // Dimensiones de pantalla completa adaptativas
       outerWaveCanvas.width = window.innerWidth * dpr;
       outerWaveCanvas.height = window.innerHeight * dpr;
       outerCtx.scale(dpr, dpr);
@@ -660,44 +657,24 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Dibujar un rectángulo redondeado con ondas adaptado para móviles
-    function drawRoundedWaveRect(ctx, x, y, width, height, radius, amplitude, step, waveCount) {
-      const pointsPerSide = 30;
+    // Dibuja el marco móvil con curvas suaves y respiración orgánica
+    function drawSmoothMobileNeorFrame(ctx, x, y, width, height, radius, amplitude, animStep) {
+      const wave = Math.sin(animStep * 2) * amplitude;
+      const rx = x - wave / 2;
+      const ry = y - wave / 2;
+      const rw = width + wave;
+      const rh = height + wave;
+
       ctx.beginPath();
-
-      // Esquina superior derecha -> Esquina inferior derecha
-      ctx.moveTo(x + width - radius, y);
-      for (let i = 0; i <= pointsPerSide; i++) {
-        const t = i / pointsPerSide;
-        const py = y + radius + t * (height - 2 * radius);
-        const wave = Math.sin(t * waveCount * Math.PI + step) * amplitude;
-        ctx.lineTo(x + width + wave, py);
-      }
-
-      // Esquina inferior derecha -> Esquina inferior izquierda
-      for (let i = 0; i <= pointsPerSide; i++) {
-        const t = i / pointsPerSide;
-        const px = x + width - radius - t * (width - 2 * radius);
-        const wave = Math.cos(t * waveCount * Math.PI + step) * amplitude;
-        ctx.lineTo(px, y + height + wave);
-      }
-
-      // Esquina inferior izquierda -> Esquina superior izquierda
-      for (let i = 0; i <= pointsPerSide; i++) {
-        const t = i / pointsPerSide;
-        const py = y + height - radius - t * (height - 2 * radius);
-        const wave = Math.sin(t * waveCount * Math.PI - step) * amplitude;
-        ctx.lineTo(x - wave, py);
-      }
-
-      // Esquina superior izquierda -> Esquina superior derecha
-      for (let i = 0; i <= pointsPerSide; i++) {
-        const t = i / pointsPerSide;
-        const px = x + radius + t * (width - 2 * radius);
-        const wave = Math.cos(t * waveCount * Math.PI - step) * amplitude;
-        ctx.lineTo(px, y - wave);
-      }
-
+      ctx.moveTo(rx + radius, ry);
+      ctx.lineTo(rx + rw - radius, ry);
+      ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + radius);
+      ctx.lineTo(rx + rw, ry + rh - radius);
+      ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - radius, ry + rh);
+      ctx.lineTo(rx + radius, ry + rh);
+      ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - radius);
+      ctx.lineTo(rx, ry + radius);
+      ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
       ctx.closePath();
       ctx.stroke();
     }
@@ -730,7 +707,7 @@
         targetR = 52; targetG = 211; targetB = 153;
       }
 
-      // Transición ultrasuave LERP
+      // Interpolación suave LERP
       const lerpSpeed = 0.06;
       currentAmplitude += (targetAmplitude - currentAmplitude) * lerpSpeed;
       currentGlow += (targetGlow - currentGlow) * lerpSpeed;
@@ -776,7 +753,7 @@
       ctx.closePath();
       ctx.stroke();
 
-      // 2. Renderizar Aro Exterior Adaptativo (Móviles y PC)
+      // 2. Renderizar Aro Exterior Adaptativo
       const oWidth = window.innerWidth;
       const oHeight = window.innerHeight;
       const cardRect = appCard.getBoundingClientRect();
@@ -791,7 +768,7 @@
       outerCtx.lineJoin = 'round';
 
       if (window.innerWidth >= 769) {
-        // EN PC: Aro Neón Circular Centrado
+        // EN PC: Circulo Fluido
         const oCenterX = cardRect.left + cardRect.width / 2;
         const oCenterY = cardRect.top + cardRect.height / 2;
         const cardRadius = appCard.offsetWidth / 2;
@@ -813,15 +790,15 @@
         outerCtx.closePath();
         outerCtx.stroke();
       } else {
-        // EN MÓVILES: Aro Neón Rectangular Redondeado al Borde de la Tarjeta
-        const padding = 12;
-        const x = cardRect.left - padding;
-        const y = cardRect.top - padding;
-        const w = cardRect.width + (padding * 2);
-        const h = cardRect.height + (padding * 2);
-        const r = 36; // Coincide con la curvatura de la tarjeta
+        // EN MÓVILES: Esquinas curvadas fluidas perfectas sin bordes quebrados
+        const margin = 10;
+        const x = cardRect.left - margin;
+        const y = cardRect.top - margin;
+        const w = cardRect.width + (margin * 2);
+        const h = cardRect.height + (margin * 2);
+        const r = 36; 
 
-        drawRoundedWaveRect(outerCtx, x, y, w, h, r, currentAmplitude * 0.5, outerStep, 4);
+        drawSmoothMobileNeorFrame(outerCtx, x, y, w, h, r, currentAmplitude * 0.6, outerStep);
       }
 
       requestAnimationFrame(renderWaves);
