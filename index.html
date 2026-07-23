@@ -119,11 +119,11 @@
 
     .top-buttons-wrapper {
       position: absolute; top: 24px; left: 24px; right: 24px;
-      display: flex; justify-content: space-between; z-index: 10;
+      display: flex; justify-content: space-between; z-index: 20;
     }
 
     @media (min-width: 769px) {
-      .top-buttons-wrapper { top: 90px; left: 80px; right: 80px; }
+      .top-buttons-wrapper { top: 75px; left: 70px; right: 70px; }
     }
 
     .icon-btn {
@@ -134,6 +134,59 @@
       transition: transform 0.2s, background-color 0.2s;
     }
     .icon-btn:active { transform: scale(0.92); }
+
+    /* Contenedor del menú desplegable superior derecho con rebote */
+    .menu-dropdown-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .menu-popup {
+      position: absolute;
+      top: 52px;
+      right: 0;
+      background: #022c22;
+      border: 1px solid #34d399;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      width: 170px;
+      z-index: 30;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-15px) scale(0.85);
+      transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  visibility 0.3s;
+    }
+
+    .menu-popup.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    .menu-item-btn {
+      background: #064e3b;
+      border: 1px solid #047857;
+      color: #ecfdf5;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+      text-align: left;
+    }
+    .menu-item-btn:hover { background: #047857; border-color: #34d399; }
+    .menu-item-btn:active { transform: scale(0.96); }
 
     h1 { margin: 0; color: #34d399; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
     .subtitle { font-size: 0.85rem; font-weight: 500; color: #a7f3d0; margin-top: 0.2rem; opacity: 0.85; }
@@ -227,7 +280,6 @@
     .focus-name, .voice-name { font-size: 0.9rem; font-weight: 700; color: #ecfdf5; }
     .focus-desc, .voice-desc { font-size: 0.75rem; color: #a7f3d0; opacity: 0.85; }
 
-    /* Estilos para reseña y consola */
     .app-disclaimer {
       position: fixed; bottom: 8px; right: 100px; z-index: 2000;
       font-size: 0.65rem; color: #6ee7b7; opacity: 0.5; pointer-events: none;
@@ -313,10 +365,29 @@
   <div class="app-wrapper">
     <div class="app-card" id="appCard">
       
+      <!-- BOTONES SUPERIORES (CHAT A LA IZQUIERDA, MENÚ HAMBURGUESA A LA DERECHA) -->
       <div class="top-buttons-wrapper">
-        <button class="icon-btn" id="toggleFocusBtn" title="Cambiar Enfoque">🎯</button>
-        <button class="icon-btn" id="toggleVoicesBtn" title="Cambiar Voz">🎙️</button>
         <button class="icon-btn" id="toggleSidebarBtn" title="Ver Chat y Correcciones">💬</button>
+        
+        <!-- Menú desplegable superior derecho con efecto rebote -->
+        <div class="menu-dropdown-container" id="menuDropdownContainer">
+          <button class="icon-btn" id="mainMenuBtn" title="Menú de Opciones">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          
+          <div class="menu-popup" id="menuPopup">
+            <button class="menu-item-btn" id="toggleFocusBtn">
+              🎯 Enfoque
+            </button>
+            <button class="menu-item-btn" id="toggleVoicesBtn">
+              🎙️ Voz
+            </button>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -413,15 +484,11 @@
     </div>
   </div>
 
-  <!-- Reseña discreta y consola de depuración -->
   <div class="app-disclaimer">TaKiA aún está en pruebas, disculpas por los errores</div>
   <button class="debug-toggle-btn" onclick="toggleDebugConsole()">🛠️ Consola</button>
   <div class="debug-console" id="debugConsole"></div>
 
   <script>
-    // ==========================================
-    // CONFIGURACIÓN SUPABASE Y LLAVE SEGURA
-    // ==========================================
     const SUPABASE_URL = 'https://oktzepuhepcnapgjdmvn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_tkRsAoBOSjafWybsD8wHQg_pjvwzU8c';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -457,7 +524,6 @@
     }
     function toggleDebugConsole() { debugConsole.classList.toggle('open'); }
 
-    // Control visual de formularios de autenticación
     function showAuthForm(type) {
       document.getElementById('authOptionsGroup').style.display = 'none';
       document.getElementById('loginForm').classList.remove('active');
@@ -492,7 +558,29 @@
     const voiceSidebar = document.getElementById('voiceSidebar');
     const backdrop = document.getElementById('panelBackdrop');
 
-    function openPanel(panel) { panel.classList.add('open'); backdrop.classList.add('active'); }
+    // Lógica del menú desplegable superior derecho con efecto rebote
+    const mainMenuBtn = document.getElementById('mainMenuBtn');
+    const menuPopup = document.getElementById('menuPopup');
+
+    mainMenuBtn.onclick = (e) => {
+      e.stopPropagation();
+      menuPopup.classList.toggle('open');
+    };
+
+    window.addEventListener('click', () => {
+      menuPopup.classList.remove('open');
+    });
+
+    menuPopup.onclick = (e) => {
+      e.stopPropagation();
+    };
+
+    function openPanel(panel) { 
+      menuPopup.classList.remove('open');
+      panel.classList.add('open'); 
+      backdrop.classList.add('active'); 
+    }
+    
     function closePanels() { 
       sidebarTranscript.classList.remove('open'); 
       focusSidebar.classList.remove('open'); 
@@ -508,7 +596,6 @@
     document.getElementById('closeVoicesBtn').onclick = closePanels;
     backdrop.onclick = closePanels;
 
-    // INICIAR SESIÓN (USUARIO EXISTENTE)
     async function handleLogin(e) {
       e.preventDefault();
       const username = document.getElementById('loginUsername').value.trim().toLowerCase();
@@ -548,7 +635,6 @@
       }
     }
 
-    // REGISTRO DE NUEVO USUARIO
     async function handleRegister(e) {
       e.preventDefault();
       const username = document.getElementById('regUserName').value.trim().toLowerCase();
@@ -592,7 +678,6 @@
       }
     }
 
-    // CONFIGURACIÓN POST-AUTENTICACIÓN COMÚN
     async function setupUserSessionAfterAuth() {
       let { data: sessionData } = await supabaseClient
         .from('user_sessions')
@@ -616,7 +701,7 @@
       
       currentUser.focus_area = newFocus;
       document.querySelectorAll('.focus-item').forEach(i => i.classList.remove('selected'));
-      el.classList.add('selected');
+      if (el) el.classList.add('selected');
       closePanels();
 
       await supabaseClient
@@ -685,7 +770,7 @@ Follow this with a short, friendly spoken response in English continuing the con
       if (SELECTED_VOICE_NAME === name) { closePanels(); return; }
       SELECTED_VOICE_NAME = name;
       document.querySelectorAll('.voice-item').forEach(i => i.classList.remove('selected'));
-      el.classList.add('selected');
+      if (el) el.classList.add('selected');
       closePanels();
       if (isConnected) await reconnectWithNewVoice();
     }
