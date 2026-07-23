@@ -275,8 +275,9 @@
 
       <!-- 2. Formulario de Inicio de Sesión -->
       <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
-        <span style="font-size: 0.8rem; color: #a7f3d0; margin-bottom: 4px;">Ingresa tu usuario registrado</span>
+        <span style="font-size: 0.8rem; color: #a7f3d0; margin-bottom: 4px;">Ingresa tus datos</span>
         <input type="text" class="auth-input" id="loginUsername" placeholder="Tu nombre de usuario" required>
+        <input type="password" class="auth-input" id="loginPassword" placeholder="Contraseña" required>
         <button type="submit" class="auth-btn">Entrar</button>
         <button type="button" class="auth-btn-back" onclick="showAuthOptions()">← Volver</button>
       </form>
@@ -285,6 +286,7 @@
       <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
         <input type="text" class="auth-input" id="regUserName" placeholder="Nombre de usuario único" required>
         <input type="text" class="auth-input" id="regDisplayName" placeholder="Tu Nombre / Apodo" required>
+        <input type="password" class="auth-input" id="regPassword" placeholder="Contraseña" required>
         
         <select class="auth-select" id="regEnglishLevel">
           <option value="Beginner">Nivel: Principiante (Beginner)</option>
@@ -510,7 +512,8 @@
     async function handleLogin(e) {
       e.preventDefault();
       const username = document.getElementById('loginUsername').value.trim().toLowerCase();
-      statusText.innerText = 'Buscando cuenta...';
+      const password = document.getElementById('loginPassword').value;
+      statusText.innerText = 'Verificando cuenta...';
 
       try {
         let { data: existingUser, error } = await supabaseClient
@@ -522,6 +525,12 @@
         if (error || !existingUser) {
           alert("Usuario no encontrado. Por favor regístrate primero.");
           statusText.innerText = 'Usuario no existe';
+          return;
+        }
+
+        if (existingUser.password !== password) {
+          alert("Contraseña incorrecta.");
+          statusText.innerText = 'Contraseña incorrecta';
           return;
         }
 
@@ -544,6 +553,7 @@
       e.preventDefault();
       const username = document.getElementById('regUserName').value.trim().toLowerCase();
       const displayName = document.getElementById('regDisplayName').value.trim();
+      const password = document.getElementById('regPassword').value;
       const englishLevel = document.getElementById('regEnglishLevel').value;
 
       const checkboxes = document.querySelectorAll('#registerForm input[name="focus"]:checked');
@@ -567,7 +577,7 @@
 
         let { data: newUser, error: insertError } = await supabaseClient
           .from('users')
-          .insert([{ username, display_name: displayName, english_level: englishLevel, focus_area: focusArea }])
+          .insert([{ username, display_name: displayName, password, english_level: englishLevel, focus_area: focusArea }])
           .select()
           .single();
 
