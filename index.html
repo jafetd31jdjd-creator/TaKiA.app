@@ -51,7 +51,11 @@
 
     .auth-title { font-size: 2.2rem; font-weight: 800; color: #34d399; margin: 0; letter-spacing: -0.5px; }
     .auth-subtitle { font-size: 0.8rem; color: #a7f3d0; margin-bottom: 1.5rem; opacity: 0.85; }
-    .auth-form { display: flex; flex-direction: column; width: 100%; gap: 12px; }
+    
+    .auth-form { display: none; flex-direction: column; width: 100%; gap: 12px; }
+    .auth-form.active { display: flex; }
+    
+    .auth-options-group { display: flex; flex-direction: column; width: 100%; gap: 12px; }
 
     .auth-input, .auth-select {
       width: 100%; padding: 12px 16px;
@@ -76,6 +80,13 @@
       color: white; border: none; border-radius: 12px;
       font-family: inherit; font-size: 0.95rem; font-weight: 700;
       cursor: pointer; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+    }
+    .auth-btn-secondary {
+      background: transparent; border: 1px solid #047857; color: #34d399; box-shadow: none;
+    }
+    .auth-btn-back {
+      background: none; border: none; color: #a7f3d0; font-size: 0.8rem;
+      cursor: pointer; margin-top: 8px; text-decoration: underline;
     }
 
     .app-wrapper {
@@ -216,10 +227,17 @@
     .focus-name, .voice-name { font-size: 0.9rem; font-weight: 700; color: #ecfdf5; }
     .focus-desc, .voice-desc { font-size: 0.75rem; color: #a7f3d0; opacity: 0.85; }
 
+    /* Estilos para reseña y consola */
+    .app-disclaimer {
+      position: fixed; bottom: 8px; right: 100px; z-index: 2000;
+      font-size: 0.65rem; color: #6ee7b7; opacity: 0.5; pointer-events: none;
+      font-style: italic; letter-spacing: 0.2px;
+    }
+
     .debug-toggle-btn {
       position: fixed; bottom: 16px; right: 16px; z-index: 2000;
       background: #064e3b; border: 1px solid #34d399; color: #34d399;
-      padding: 8px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+      padding: 6px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
       cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
     .debug-console {
@@ -235,7 +253,7 @@
 </head>
 <body>
 
-  <!-- PANTALLA DE REGISTRO / LOGIN CON SELECCIÓN MÚLTIPLE -->
+  <!-- PANTALLA DE ACCESO: INICIO DE SESIÓN / REGISTRO -->
   <div class="auth-screen" id="authScreen">
     <div class="auth-container">
       <div class="auth-logo-wrapper">
@@ -249,17 +267,31 @@
       <h2 class="auth-title">TaKiA</h2>
       <div class="auth-subtitle">AI English Voice Tutor</div>
       
-      <form class="auth-form" onsubmit="handleAuthAndRegister(event)">
-        <input type="text" class="auth-input" id="userName" placeholder="Nombre de usuario (único)" required>
-        <input type="text" class="auth-input" id="displayName" placeholder="Tu Nombre / Apodo" required>
+      <!-- 1. Pantalla de Selección Principal -->
+      <div class="auth-options-group" id="authOptionsGroup">
+        <button type="button" class="auth-btn" onclick="showAuthForm('login')">Iniciar sesión</button>
+        <button type="button" class="auth-btn auth-btn-secondary" onclick="showAuthForm('register')">Registrarse</button>
+      </div>
+
+      <!-- 2. Formulario de Inicio de Sesión -->
+      <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+        <span style="font-size: 0.8rem; color: #a7f3d0; margin-bottom: 4px;">Ingresa tu usuario registrado</span>
+        <input type="text" class="auth-input" id="loginUsername" placeholder="Tu nombre de usuario" required>
+        <button type="submit" class="auth-btn">Entrar</button>
+        <button type="button" class="auth-btn-back" onclick="showAuthOptions()">← Volver</button>
+      </form>
+
+      <!-- 3. Formulario de Registro -->
+      <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+        <input type="text" class="auth-input" id="regUserName" placeholder="Nombre de usuario único" required>
+        <input type="text" class="auth-input" id="regDisplayName" placeholder="Tu Nombre / Apodo" required>
         
-        <select class="auth-select" id="englishLevel">
+        <select class="auth-select" id="regEnglishLevel">
           <option value="Beginner">Nivel: Principiante (Beginner)</option>
           <option value="Intermediate" selected>Nivel: Intermedio (Intermediate)</option>
           <option value="Advanced">Nivel: Avanzado (Advanced)</option>
         </select>
 
-        <!-- SELECCIÓN MÚLTIPLE DE ENFOQUES -->
         <div class="checkbox-group">
           <span style="font-size: 0.75rem; color: #a7f3d0; margin-bottom: 2px;">¿Qué quieres mejorar? (Selección múltiple)</span>
           <label class="checkbox-label"><input type="checkbox" name="focus" value="Speaking" checked> Speaking</label>
@@ -267,7 +299,8 @@
           <label class="checkbox-label"><input type="checkbox" name="focus" value="Grammar"> Grammar</label>
         </div>
 
-        <button type="submit" class="auth-btn">Iniciar Práctica</button>
+        <button type="submit" class="auth-btn">Crear Cuenta</button>
+        <button type="button" class="auth-btn-back" onclick="showAuthOptions()">← Volver</button>
       </form>
     </div>
   </div>
@@ -278,7 +311,6 @@
   <div class="app-wrapper">
     <div class="app-card" id="appCard">
       
-      <!-- BOTONES SUPERIORES (CONFIGURACIÓN, VOZ, CHAT) -->
       <div class="top-buttons-wrapper">
         <button class="icon-btn" id="toggleFocusBtn" title="Cambiar Enfoque">🎯</button>
         <button class="icon-btn" id="toggleVoicesBtn" title="Cambiar Voz">🎙️</button>
@@ -329,7 +361,7 @@
     </div>
   </div>
 
-  <!-- PANEL LATERAL: CAMBIAR ENFOQUE (Grammar/Speaking/Listening) -->
+  <!-- PANEL LATERAL: CAMBIAR ENFOQUE -->
   <div class="sidebar-panel" id="focusSidebar">
     <div class="sidebar-header">
       <h3>Cambiar Enfoque de Estudio</h3>
@@ -379,6 +411,8 @@
     </div>
   </div>
 
+  <!-- Reseña discreta y consola de depuración -->
+  <div class="app-disclaimer">TaKiA aún está en pruebas, disculpas por los errores</div>
   <button class="debug-toggle-btn" onclick="toggleDebugConsole()">🛠️ Consola</button>
   <div class="debug-console" id="debugConsole"></div>
 
@@ -392,9 +426,8 @@
 
     let currentUser = null;
     let currentSessionId = null;
-    let DEFAULT_API_KEY = ""; // Inicia vacía por seguridad
+    let DEFAULT_API_KEY = "";
 
-    // Función para obtener la llave de Google IA desde la Edge Function de Supabase
     async function loadSecureApiKey() {
       try {
         const { data, error } = await supabaseClient.functions.invoke('rapid-action');
@@ -406,7 +439,6 @@
       }
     }
 
-    // Cargar la llave de forma segura apenas abra la página
     window.addEventListener('DOMContentLoaded', () => {
       loadSecureApiKey();
     });
@@ -422,6 +454,25 @@
       console.log(msg);
     }
     function toggleDebugConsole() { debugConsole.classList.toggle('open'); }
+
+    // Control visual de formularios de autenticación
+    function showAuthForm(type) {
+      document.getElementById('authOptionsGroup').style.display = 'none';
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('registerForm').classList.remove('active');
+      
+      if (type === 'login') {
+        document.getElementById('loginForm').classList.add('active');
+      } else {
+        document.getElementById('registerForm').classList.add('active');
+      }
+    }
+
+    function showAuthOptions() {
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('registerForm').classList.remove('active');
+      document.getElementById('authOptionsGroup').style.display = 'flex';
+    }
 
     const talkBtn = document.getElementById('talkBtn');
     const appCard = document.getElementById('appCard');
@@ -455,19 +506,51 @@
     document.getElementById('closeVoicesBtn').onclick = closePanels;
     backdrop.onclick = closePanels;
 
-    // REGISTRO CON SELECCIÓN MÚLTIPLE
-    async function handleAuthAndRegister(e) {
+    // INICIAR SESIÓN (USUARIO EXISTENTE)
+    async function handleLogin(e) {
       e.preventDefault();
-      const username = document.getElementById('userName').value.trim().toLowerCase();
-      const displayName = document.getElementById('displayName').value.trim();
-      const englishLevel = document.getElementById('englishLevel').value;
+      const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+      statusText.innerText = 'Buscando cuenta...';
 
-      // Obtener enfoques seleccionados múltiples
-      const checkboxes = document.querySelectorAll('input[name="focus"]:checked');
+      try {
+        let { data: existingUser, error } = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .single();
+
+        if (error || !existingUser) {
+          alert("Usuario no encontrado. Por favor regístrate primero.");
+          statusText.innerText = 'Usuario no existe';
+          return;
+        }
+
+        currentUser = existingUser;
+        await supabaseClient
+          .from('users')
+          .update({ last_login: new Date() })
+          .eq('id', currentUser.id);
+
+        await setupUserSessionAfterAuth();
+      } catch (err) {
+        logDebug("Error en inicio de sesión: " + err.message, true);
+        alert("Error al iniciar sesión.");
+        statusText.innerText = 'Error de inicio de sesión';
+      }
+    }
+
+    // REGISTRO DE NUEVO USUARIO
+    async function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('regUserName').value.trim().toLowerCase();
+      const displayName = document.getElementById('regDisplayName').value.trim();
+      const englishLevel = document.getElementById('regEnglishLevel').value;
+
+      const checkboxes = document.querySelectorAll('#registerForm input[name="focus"]:checked');
       const selectedFocusArray = Array.from(checkboxes).map(cb => cb.value);
       const focusArea = selectedFocusArray.length > 0 ? selectedFocusArray.join(', ') : 'Speaking';
 
-      statusText.innerText = 'Guardando perfil en BD...';
+      statusText.innerText = 'Registrando cuenta...';
 
       try {
         let { data: existingUser } = await supabaseClient
@@ -477,45 +560,47 @@
           .single();
 
         if (existingUser) {
-          currentUser = existingUser;
-          await supabaseClient
-            .from('users')
-            .update({ last_login: new Date(), english_level: englishLevel, focus_area: focusArea })
-            .eq('id', currentUser.id);
-        } else {
-          let { data: newUser, error: insertError } = await supabaseClient
-            .from('users')
-            .insert([{ username, display_name: displayName, english_level: englishLevel, focus_area: focusArea }])
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-          currentUser = newUser;
+          alert("Ese nombre de usuario ya está en uso. Prueba con otro o inicia sesión.");
+          statusText.innerText = 'Usuario ya registrado';
+          return;
         }
 
-        let { data: sessionData } = await supabaseClient
-          .from('user_sessions')
-          .insert([{ user_id: currentUser.id, topics_covered: `Enfoque múltiple: ${focusArea}` }])
+        let { data: newUser, error: insertError } = await supabaseClient
+          .from('users')
+          .insert([{ username, display_name: displayName, english_level: englishLevel, focus_area: focusArea }])
           .select()
           .single();
 
-        if (sessionData) currentSessionId = sessionData.id;
+        if (insertError) throw insertError;
+        currentUser = newUser;
 
-        document.getElementById('userSubtitle').innerText = `Tutor • Hola, ${currentUser.display_name}`;
-        updateActiveFocusUI(currentUser.focus_area);
-
-        const authScreen = document.getElementById('authScreen');
-        authScreen.style.opacity = '0';
-        setTimeout(() => { authScreen.style.display = 'none'; }, 600);
-
+        await setupUserSessionAfterAuth();
       } catch (err) {
-        logDebug("Error en Supabase: " + err.message, true);
-        alert("Error al conectar con la base de datos.");
+        logDebug("Error en registro: " + err.message, true);
+        alert("Error al registrar usuario.");
         statusText.innerText = 'Error de registro';
       }
     }
 
-    // CAMBIAR ENFOQUE EN TIEMPO REAL DESDE EL PANEL
+    // CONFIGURACIÓN POST-AUTENTICACIÓN COMÚN
+    async function setupUserSessionAfterAuth() {
+      let { data: sessionData } = await supabaseClient
+        .from('user_sessions')
+        .insert([{ user_id: currentUser.id, topics_covered: `Enfoque: ${currentUser.focus_area}` }])
+        .select()
+        .single();
+
+      if (sessionData) currentSessionId = sessionData.id;
+
+      document.getElementById('userSubtitle').innerText = `Tutor • Hola, ${currentUser.display_name}`;
+      updateActiveFocusUI(currentUser.focus_area);
+
+      const authScreen = document.getElementById('authScreen');
+      authScreen.style.opacity = '0';
+      setTimeout(() => { authScreen.style.display = 'none'; }, 600);
+      statusText.innerText = 'Listo para hablar';
+    }
+
     async function updateFocusArea(newFocus, el) {
       if (!currentUser) return;
       
@@ -524,7 +609,6 @@
       el.classList.add('selected');
       closePanels();
 
-      // Actualizar en Supabase
       await supabaseClient
         .from('users')
         .update({ focus_area: newFocus })
@@ -537,7 +621,7 @@
     function updateActiveFocusUI(focusStr) {
       document.querySelectorAll('.focus-item').forEach(item => {
         const name = item.querySelector('.focus-name').innerText;
-        if (focusStr.includes(name)) {
+        if (focusStr && focusStr.includes(name)) {
           item.classList.add('selected');
         } else {
           item.classList.remove('selected');
