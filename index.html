@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TaKiA - AI Voice Tutor</title>
+  <title>TaKiA - AI English Voice Tutor</title>
+
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,13 +28,9 @@
     }
 
     .auth-screen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background-color: #03221a;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 1000;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #03221a; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 1000;
       transition: opacity 0.6s ease, visibility 0.6s ease;
     }
 
@@ -54,13 +53,22 @@
     .auth-subtitle { font-size: 0.8rem; color: #a7f3d0; margin-bottom: 1.5rem; opacity: 0.85; }
     .auth-form { display: flex; flex-direction: column; width: 100%; gap: 12px; }
 
-    .auth-input {
+    .auth-input, .auth-select {
       width: 100%; padding: 12px 16px;
       background: #064e3b; border: 1px solid #047857;
       border-radius: 12px; color: #ecfdf5;
       font-family: inherit; font-size: 0.9rem; outline: none;
     }
     .auth-input::placeholder { color: #6ee7b7; opacity: 0.6; }
+    .auth-select option { background: #022c22; color: #ecfdf5; }
+
+    .checkbox-group {
+      display: flex; flex-direction: column; gap: 8px; text-align: left;
+      background: #064e3b; border: 1px solid #047857; border-radius: 12px; padding: 12px 16px;
+      font-size: 0.85rem; color: #a7f3d0;
+    }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ecfdf5; font-weight: 600; }
+    .checkbox-label input { accent-color: #059669; width: 16px; height: 16px; cursor: pointer; }
 
     .auth-btn {
       width: 100%; padding: 12px; margin-top: 6px;
@@ -75,7 +83,6 @@
       display: flex; align-items: center; justify-content: center; padding: 1rem;
     }
 
-    /* DISEÑO POR DEFECTO (Móviles) */
     .app-card { 
       background-color: #022c22; padding: 2rem 1.25rem; 
       border-radius: 28px; width: 100%; max-width: 380px; 
@@ -86,20 +93,12 @@
       border: 1px solid rgba(52, 211, 153, 0.15); min-height: 480px;
     }
 
-    /* DISEÑO CIRCULAR CLÁSICO PARA PC */
     @media (min-width: 769px) {
       .app-card {
-        width: 500px;
-        height: 500px;
-        max-width: 500px;
-        min-height: 500px;
-        border-radius: 50%;
-        padding: 4.5rem 2rem;
+        width: 500px; height: 500px; max-width: 500px; min-height: 500px;
+        border-radius: 50%; padding: 4.5rem 2rem;
         box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(4, 120, 87, 0.25);
-        border: 2px solid rgba(52, 211, 153, 0.4);
-        justify-content: center;
-        gap: 0.4rem;
-        position: relative;
+        border: 2px solid rgba(52, 211, 153, 0.4); justify-content: center; gap: 0.4rem; position: relative;
       }
       .app-card h1 { font-size: 1.85rem; margin-top: 5px; }
       .app-card .subtitle { font-size: 0.75rem; }
@@ -107,23 +106,23 @@
       .call-btn { width: 90px !important; height: 90px !important; }
     }
 
-    .toggle-transcript-btn, .toggle-voices-btn {
-      position: absolute; top: 24px;
+    .top-buttons-wrapper {
+      position: absolute; top: 24px; left: 24px; right: 24px;
+      display: flex; justify-content: space-between; z-index: 10;
+    }
+
+    @media (min-width: 769px) {
+      .top-buttons-wrapper { top: 90px; left: 80px; right: 80px; }
+    }
+
+    .icon-btn {
       background: #047857; border: 1px solid #34d399; color: #ecfdf5;
       width: 42px; height: 42px; border-radius: 50%;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       font-size: 1.1rem; box-shadow: 0 0 12px rgba(52, 211, 153, 0.2);
-      transition: transform 0.2s, background-color 0.2s; z-index: 10;
+      transition: transform 0.2s, background-color 0.2s;
     }
-    .toggle-transcript-btn { right: 24px; }
-    .toggle-voices-btn { left: 24px; top: 24px; }
-
-    @media (min-width: 769px) {
-      .toggle-transcript-btn { top: 90px; right: 80px; }
-      .toggle-voices-btn { top: 90px; left: 80px; }
-    }
-
-    .toggle-transcript-btn:active, .toggle-voices-btn:active { transform: scale(0.92); }
+    .icon-btn:active { transform: scale(0.92); }
 
     h1 { margin: 0; color: #34d399; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
     .subtitle { font-size: 0.85rem; font-weight: 500; color: #a7f3d0; margin-top: 0.2rem; opacity: 0.85; }
@@ -134,15 +133,7 @@
     }
 
     .wave-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    
-    .pc-outer-canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
-      display: block;
-    }
+    .pc-outer-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
 
     .call-btn { 
       width: 120px; height: 120px; border-radius: 50%; border: none; 
@@ -157,25 +148,15 @@
     .btn-label-default { font-family: inherit; font-size: 0.68rem; font-weight: 800; margin-top: 2px; letter-spacing: 0.5px; color: #ecfdf5; text-transform: uppercase; }
     
     .btn-label-listening { 
-      position: absolute; 
-      top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      padding: 0 12px; 
-      font-size: 0.62rem; 
-      font-weight: 800; 
-      letter-spacing: 0.5px; 
-      color: #ffffff; 
-      text-transform: uppercase; 
-      opacity: 0; 
-      transition: opacity 0.25s ease; 
-      pointer-events: none; 
-      text-align: center;
-      line-height: 1.2;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center; padding: 0 12px; 
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px; color: #ffffff; 
+      text-transform: uppercase; opacity: 0; transition: opacity 0.25s ease; 
+      pointer-events: none; text-align: center; line-height: 1.2;
     }
 
     .call-btn.active-talk .btn-content-default { opacity: 0; transform: scale(0.6); }
     .call-btn.active-talk .btn-label-listening { opacity: 1; }
-
     .call-btn.talking { background: linear-gradient(135deg, #dc2626, #991b1b); box-shadow: 0 0 30px rgba(220, 38, 38, 0.6); animation: pulse 1.5s infinite; }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
 
@@ -217,6 +198,11 @@
     .msg { padding: 0.65rem 0.95rem; border-radius: 1rem; max-width: 85%; word-wrap: break-word; line-height: 1.4; white-space: pre-wrap; }
     .msg.user { background-color: #059669; color: white; align-self: flex-end; border-bottom-right-radius: 0.2rem; }
     .msg.ai { background-color: #064e3b; color: #ecfdf5; align-self: flex-start; border: 1px solid #047857; border-bottom-left-radius: 0.2rem; }
+    .msg.correction { 
+      background-color: #78350f; color: #fef08a; align-self: center; 
+      border: 1px dashed #f59e0b; width: 100%; text-align: center; 
+      font-size: 0.85rem; font-weight: 600; border-radius: 14px; padding: 10px 14px;
+    }
 
     .chat-input-wrapper { display: flex; gap: 8px; align-items: center; background: #03221a; padding: 6px 8px 6px 14px; border-radius: 20px; border: 1px solid #047857; }
     .chat-input { flex: 1; background: transparent; border: none; color: #ecfdf5; font-family: inherit; font-size: 0.88rem; outline: none; }
@@ -224,15 +210,32 @@
     .chat-send-btn { background: #059669; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
     .chat-send-btn:active { transform: scale(0.92); }
 
-    .voice-options-list { display: flex; flex-direction: column; gap: 10px; }
-    .voice-item { display: flex; align-items: center; justify-content: space-between; background: #064e3b; padding: 12px 16px; border-radius: 14px; border: 1.5px solid transparent; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
-    .voice-item.selected { border-color: #34d399; background: #047857; }
-    .voice-name { font-size: 0.9rem; font-weight: 700; color: #ecfdf5; }
-    .voice-desc { font-size: 0.75rem; color: #a7f3d0; opacity: 0.85; }
+    .focus-options-list, .voice-options-list { display: flex; flex-direction: column; gap: 10px; }
+    .focus-item, .voice-item { display: flex; align-items: center; justify-content: space-between; background: #064e3b; padding: 12px 16px; border-radius: 14px; border: 1.5px solid transparent; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+    .focus-item.selected, .voice-item.selected { border-color: #34d399; background: #047857; }
+    .focus-name, .voice-name { font-size: 0.9rem; font-weight: 700; color: #ecfdf5; }
+    .focus-desc, .voice-desc { font-size: 0.75rem; color: #a7f3d0; opacity: 0.85; }
+
+    .debug-toggle-btn {
+      position: fixed; bottom: 16px; right: 16px; z-index: 2000;
+      background: #064e3b; border: 1px solid #34d399; color: #34d399;
+      padding: 8px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .debug-console {
+      position: fixed; bottom: 60px; right: 16px; width: 320px; height: 200px;
+      background: rgba(2, 44, 34, 0.95); border: 1px solid #34d399; border-radius: 12px;
+      z-index: 2000; padding: 8px; font-family: monospace; font-size: 0.7rem;
+      color: #a7f3d0; overflow-y: auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .debug-console.open { display: block; }
+    .debug-log { margin-bottom: 4px; border-bottom: 1px solid rgba(52, 211, 153, 0.1); padding-bottom: 2px; }
+    .debug-err { color: #f87171; }
   </style>
 </head>
 <body>
 
+  <!-- PANTALLA DE REGISTRO / LOGIN CON SELECCIÓN MÚLTIPLE -->
   <div class="auth-screen" id="authScreen">
     <div class="auth-container">
       <div class="auth-logo-wrapper">
@@ -246,27 +249,45 @@
       <h2 class="auth-title">TaKiA</h2>
       <div class="auth-subtitle">AI English Voice Tutor</div>
       
-      <form class="auth-form" onsubmit="handleAuth(event)">
-        <input type="text" class="auth-input" id="userName" placeholder="Nombre de usuario" required>
-        <input type="password" class="auth-input" id="userPass" placeholder="Contraseña" required>
+      <form class="auth-form" onsubmit="handleAuthAndRegister(event)">
+        <input type="text" class="auth-input" id="userName" placeholder="Nombre de usuario (único)" required>
+        <input type="text" class="auth-input" id="displayName" placeholder="Tu Nombre / Apodo" required>
+        
+        <select class="auth-select" id="englishLevel">
+          <option value="Beginner">Nivel: Principiante (Beginner)</option>
+          <option value="Intermediate" selected>Nivel: Intermedio (Intermediate)</option>
+          <option value="Advanced">Nivel: Avanzado (Advanced)</option>
+        </select>
+
+        <!-- SELECCIÓN MÚLTIPLE DE ENFOQUES -->
+        <div class="checkbox-group">
+          <span style="font-size: 0.75rem; color: #a7f3d0; margin-bottom: 2px;">¿Qué quieres mejorar? (Selección múltiple)</span>
+          <label class="checkbox-label"><input type="checkbox" name="focus" value="Speaking" checked> Speaking</label>
+          <label class="checkbox-label"><input type="checkbox" name="focus" value="Listening"> Listening</label>
+          <label class="checkbox-label"><input type="checkbox" name="focus" value="Grammar"> Grammar</label>
+        </div>
+
         <button type="submit" class="auth-btn">Iniciar Práctica</button>
       </form>
     </div>
   </div>
 
   <div class="panel-backdrop" id="panelBackdrop"></div>
-
   <canvas id="outerWaveCanvas" class="pc-outer-canvas"></canvas>
 
   <div class="app-wrapper">
     <div class="app-card" id="appCard">
-
-      <button class="toggle-transcript-btn" id="toggleSidebarBtn" title="Ver Transcripción">💬</button>
-      <button class="toggle-voices-btn" id="toggleVoicesBtn" title="Cambiar Voz">🎙️</button>
+      
+      <!-- BOTONES SUPERIORES (CONFIGURACIÓN, VOZ, CHAT) -->
+      <div class="top-buttons-wrapper">
+        <button class="icon-btn" id="toggleFocusBtn" title="Cambiar Enfoque">🎯</button>
+        <button class="icon-btn" id="toggleVoicesBtn" title="Cambiar Voz">🎙️</button>
+        <button class="icon-btn" id="toggleSidebarBtn" title="Ver Chat y Correcciones">💬</button>
+      </div>
 
       <div>
         <h1>TaKiA</h1>
-        <div class="subtitle">AI English Voice Tutor</div>
+        <div class="subtitle" id="userSubtitle">AI English Voice Tutor</div>
       </div>
 
       <div class="button-container">
@@ -289,9 +310,10 @@
     </div>
   </div>
 
+  <!-- PANEL LATERAL: CHAT Y CORRECCIONES -->
   <div class="sidebar-panel" id="sidebarTranscript">
     <div class="sidebar-header">
-      <h3>Transcripción y Chat</h3>
+      <h3>Chat y Correcciones de TaKiA</h3>
       <button class="close-btn" id="closeSidebarBtn">✕</button>
     </div>
     <div class="transcript-box" id="transcriptBox"></div>
@@ -307,6 +329,35 @@
     </div>
   </div>
 
+  <!-- PANEL LATERAL: CAMBIAR ENFOQUE (Grammar/Speaking/Listening) -->
+  <div class="sidebar-panel" id="focusSidebar">
+    <div class="sidebar-header">
+      <h3>Cambiar Enfoque de Estudio</h3>
+      <button class="close-btn" id="closeFocusBtn">✕</button>
+    </div>
+    <div class="focus-options-list" id="focusOptionsList">
+      <div class="focus-item" onclick="updateFocusArea('Speaking', this)">
+        <div>
+          <div class="focus-name">Speaking</div>
+          <div class="focus-desc">Fluidez y conversación natural</div>
+        </div>
+      </div>
+      <div class="focus-item" onclick="updateFocusArea('Listening', this)">
+        <div>
+          <div class="focus-name">Listening</div>
+          <div class="focus-desc">Comprensión auditiva y velocidad</div>
+        </div>
+      </div>
+      <div class="focus-item" onclick="updateFocusArea('Grammar', this)">
+        <div>
+          <div class="focus-name">Grammar</div>
+          <div class="focus-desc">Corrección estricta y estructuras</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL LATERAL: SELECCIÓN DE VOZ -->
   <div class="sidebar-panel" id="voiceSidebar">
     <div class="sidebar-header">
       <h3>Selección de Tutor</h3>
@@ -325,23 +376,52 @@
           <div class="voice-desc">Masculina • Profunda</div>
         </div>
       </div>
-      <div class="voice-item" onclick="selectVoice('Puck', this)">
-        <div>
-          <div class="voice-name">Puck</div>
-          <div class="voice-desc">Masculina • Versátil</div>
-        </div>
-      </div>
-      <div class="voice-item" onclick="selectVoice('Kore', this)">
-        <div>
-          <div class="voice-name">Kore</div>
-          <div class="voice-desc">Femenina • Clara</div>
-        </div>
-      </div>
     </div>
   </div>
 
+  <button class="debug-toggle-btn" onclick="toggleDebugConsole()">🛠️ Consola</button>
+  <div class="debug-console" id="debugConsole"></div>
+
   <script>
-    const DEFAULT_API_KEY = "AQ.Ab8RN6KmHrvodQOjvYxCnmfxgqTxcwVu48uGY9N310O5jXLYAg";
+    // ==========================================
+    // CONFIGURACIÓN SUPABASE Y LLAVE SEGURA
+    // ==========================================
+    const SUPABASE_URL = 'https://oktzepuhepcnapgjdmvn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_tkRsAoBOSjafWybsD8wHQg_pjvwzU8c';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let currentSessionId = null;
+    let DEFAULT_API_KEY = ""; // Inicia vacía por seguridad
+
+    // Función para obtener la llave de Google IA desde la Edge Function de Supabase
+    async function loadSecureApiKey() {
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('rapid-action');
+        if (error) throw error;
+        DEFAULT_API_KEY = data.apiKey;
+        logDebug("Clave de IA cargada de forma segura desde la Edge Function.");
+      } catch (err) {
+        logDebug("Error cargando llave segura: " + err.message, true);
+      }
+    }
+
+    // Cargar la llave de forma segura apenas abra la página
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSecureApiKey();
+    });
+
+    const debugConsole = document.getElementById('debugConsole');
+    function logDebug(msg, isErr = false) {
+      const line = document.createElement('div');
+      line.className = 'debug-log' + (isErr ? ' debug-err' : '');
+      const time = new Date().toLocaleTimeString().split(' ')[0];
+      line.innerText = `[${time}] ${msg}`;
+      debugConsole.appendChild(line);
+      debugConsole.scrollTop = debugConsole.scrollHeight;
+      console.log(msg);
+    }
+    function toggleDebugConsole() { debugConsole.classList.toggle('open'); }
 
     const talkBtn = document.getElementById('talkBtn');
     const appCard = document.getElementById('appCard');
@@ -351,28 +431,118 @@
     
     const waveCanvas = document.getElementById('waveCanvas');
     const ctx = waveCanvas.getContext('2d');
-
     const outerWaveCanvas = document.getElementById('outerWaveCanvas');
     const outerCtx = outerWaveCanvas.getContext('2d');
 
     const sidebarTranscript = document.getElementById('sidebarTranscript');
+    const focusSidebar = document.getElementById('focusSidebar');
     const voiceSidebar = document.getElementById('voiceSidebar');
     const backdrop = document.getElementById('panelBackdrop');
 
     function openPanel(panel) { panel.classList.add('open'); backdrop.classList.add('active'); }
-    function closePanels() { sidebarTranscript.classList.remove('open'); voiceSidebar.classList.remove('open'); backdrop.classList.remove('active'); }
+    function closePanels() { 
+      sidebarTranscript.classList.remove('open'); 
+      focusSidebar.classList.remove('open'); 
+      voiceSidebar.classList.remove('open'); 
+      backdrop.classList.remove('active'); 
+    }
 
     document.getElementById('toggleSidebarBtn').onclick = () => openPanel(sidebarTranscript);
     document.getElementById('closeSidebarBtn').onclick = closePanels;
+    document.getElementById('toggleFocusBtn').onclick = () => openPanel(focusSidebar);
+    document.getElementById('closeFocusBtn').onclick = closePanels;
     document.getElementById('toggleVoicesBtn').onclick = () => openPanel(voiceSidebar);
     document.getElementById('closeVoicesBtn').onclick = closePanels;
     backdrop.onclick = closePanels;
 
-    function handleAuth(e) {
+    // REGISTRO CON SELECCIÓN MÚLTIPLE
+    async function handleAuthAndRegister(e) {
       e.preventDefault();
-      const authScreen = document.getElementById('authScreen');
-      authScreen.style.opacity = '0';
-      setTimeout(() => { authScreen.style.display = 'none'; }, 600);
+      const username = document.getElementById('userName').value.trim().toLowerCase();
+      const displayName = document.getElementById('displayName').value.trim();
+      const englishLevel = document.getElementById('englishLevel').value;
+
+      // Obtener enfoques seleccionados múltiples
+      const checkboxes = document.querySelectorAll('input[name="focus"]:checked');
+      const selectedFocusArray = Array.from(checkboxes).map(cb => cb.value);
+      const focusArea = selectedFocusArray.length > 0 ? selectedFocusArray.join(', ') : 'Speaking';
+
+      statusText.innerText = 'Guardando perfil en BD...';
+
+      try {
+        let { data: existingUser } = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .single();
+
+        if (existingUser) {
+          currentUser = existingUser;
+          await supabaseClient
+            .from('users')
+            .update({ last_login: new Date(), english_level: englishLevel, focus_area: focusArea })
+            .eq('id', currentUser.id);
+        } else {
+          let { data: newUser, error: insertError } = await supabaseClient
+            .from('users')
+            .insert([{ username, display_name: displayName, english_level: englishLevel, focus_area: focusArea }])
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          currentUser = newUser;
+        }
+
+        let { data: sessionData } = await supabaseClient
+          .from('user_sessions')
+          .insert([{ user_id: currentUser.id, topics_covered: `Enfoque múltiple: ${focusArea}` }])
+          .select()
+          .single();
+
+        if (sessionData) currentSessionId = sessionData.id;
+
+        document.getElementById('userSubtitle').innerText = `Tutor • Hola, ${currentUser.display_name}`;
+        updateActiveFocusUI(currentUser.focus_area);
+
+        const authScreen = document.getElementById('authScreen');
+        authScreen.style.opacity = '0';
+        setTimeout(() => { authScreen.style.display = 'none'; }, 600);
+
+      } catch (err) {
+        logDebug("Error en Supabase: " + err.message, true);
+        alert("Error al conectar con la base de datos.");
+        statusText.innerText = 'Error de registro';
+      }
+    }
+
+    // CAMBIAR ENFOQUE EN TIEMPO REAL DESDE EL PANEL
+    async function updateFocusArea(newFocus, el) {
+      if (!currentUser) return;
+      
+      currentUser.focus_area = newFocus;
+      document.querySelectorAll('.focus-item').forEach(i => i.classList.remove('selected'));
+      el.classList.add('selected');
+      closePanels();
+
+      // Actualizar en Supabase
+      await supabaseClient
+        .from('users')
+        .update({ focus_area: newFocus })
+        .eq('id', currentUser.id);
+
+      logDebug(`Enfoque actualizado a: ${newFocus}`);
+      if (isConnected) await reconnectWithNewVoice();
+    }
+
+    function updateActiveFocusUI(focusStr) {
+      document.querySelectorAll('.focus-item').forEach(item => {
+        const name = item.querySelector('.focus-name').innerText;
+        if (focusStr.includes(name)) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
     }
 
     let ws = null, audioCtx = null, mediaStream = null, processor = null;
@@ -380,11 +550,25 @@
     let isConnected = false, isMicActive = false;
     let currentState = 'idle'; 
     let SELECTED_VOICE_NAME = "Aoede";
-    let lastUserQuery = "";
     let recognition = null;
+    let currentAiMsgElement = null;
+    let fullModelResponse = "";
+    let lastUserMessage = "";
+
+    function getSystemInstruction() {
+      const name = currentUser ? currentUser.display_name : "User";
+      const level = currentUser ? currentUser.english_level : "Intermediate";
+      const focus = currentUser ? currentUser.focus_area : "Speaking";
+
+      return `You are TaKiA, an expert and friendly English voice tutor. 
+The user's name is ${name}. Their English level is ${level} and they want to focus on improving: ${focus}. 
+Greet ${name} warmly by their name right now in your very first message, adapting your vocabulary to their ${level} level, and ask a relevant question to practice their goals (${focus}).
+Every time the user speaks or writes in English, analyze their grammar. If there is an error, start your response with:
+[CORRECTION: "Oracion corregida aqui" | Tip: Breve consejo gramatical en español]
+Follow this with a short, friendly spoken response in English continuing the conversation. Never output internal thoughts.`;
+    }
 
     const MODEL_NAME = "models/gemini-2.5-flash-native-audio-preview-12-2025";
-    const SYSTEM_INSTRUCTION = "You are TaKiA, a friendly English tutor. Keep responses brief (1-2 sentences).";
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -396,8 +580,9 @@
       recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript;
         if (transcript.trim()) {
-          appendMessage('user', transcript);
-          lastUserQuery = transcript.trim();
+          lastUserMessage = transcript.trim();
+          appendMessage('user', lastUserMessage);
+          logDebug(`Tú dijiste: "${lastUserMessage}"`);
         }
       };
     }
@@ -416,13 +601,13 @@
       talkBtn.classList.remove('talking', 'active-talk');
       currentState = 'idle';
       if (ws) { ws.onerror = null; ws.onclose = null; ws.close(); ws = null; }
-      statusText.innerText = 'Actualizando voz...';
+      statusText.innerText = 'Actualizando configuración...';
       await new Promise(r => setTimeout(r, 300));
       await initWebSocket();
     }
 
     function appendMessage(sender, text) {
-      if (!text || !text.trim()) return;
+      if (!text || !text.trim()) return null;
       const msgDiv = document.createElement('div');
       msgDiv.classList.add('msg', sender);
       msgDiv.innerText = text.trim();
@@ -437,13 +622,15 @@
       const text = chatInput.value.trim();
       if (!text) return;
 
-      appendMessage('user', text);
-      lastUserQuery = text;
+      lastUserMessage = text;
+      appendMessage('user', lastUserMessage);
       chatInput.value = '';
 
       if (!isConnected) await initWebSocket();
 
       if (ws && ws.readyState === WebSocket.OPEN) {
+        currentAiMsgElement = null;
+        fullModelResponse = "";
         ws.send(JSON.stringify({
           clientContent: {
             turns: [{ role: "user", parts: [{ text: text }] }],
@@ -465,6 +652,19 @@
 
     async function initWebSocket() {
       try {
+        if (!DEFAULT_API_KEY) {
+          logDebug("Esperando la clave segura de la API...", true);
+          statusText.innerText = 'Cargando credenciales...';
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        if (!DEFAULT_API_KEY) {
+          alert("No se pudo cargar la clave de Google IA de forma segura.");
+          statusText.innerText = 'Error de credenciales';
+          return;
+        }
+
+        logDebug("Conectando WebSocket...");
         statusText.innerText = 'Conectando con TaKiA...';
         if (!audioCtx) {
           await startAudioInput();
@@ -476,6 +676,7 @@
         ws = new WebSocket(uri);
         
         ws.onopen = () => {
+          logDebug("WebSocket listo.");
           isConnected = true;
           statusText.innerText = 'Listo para hablar';
           
@@ -483,12 +684,12 @@
             setup: {
               model: MODEL_NAME, 
               generationConfig: { 
-                responseModalities: ["AUDIO"], 
+                responseModalities: ["AUDIO"],
                 speechConfig: { 
                   voiceConfig: { prebuiltVoiceConfig: { voiceName: SELECTED_VOICE_NAME } } 
                 }
               },
-              systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] }
+              systemInstruction: { parts: [{ text: getSystemInstruction() }] }
             }
           }));
         };
@@ -503,6 +704,42 @@
             statusText.innerText = 'TaKiA respondiendo...';
             
             for (const part of response.serverContent.modelTurn.parts) {
+              if (part.text) {
+                let textChunk = part.text;
+                fullModelResponse += textChunk;
+                
+                let displayResponse = fullModelResponse;
+                const match = fullModelResponse.match(/\[CORRECTION:\s*"([^"]+)"\s*\|\s*Tip:\s*([^\]]+)\]/i);
+                
+                if (match) {
+                  const correctedSentence = match[1].trim();
+                  const grammarTip = match[2].trim();
+                  
+                  let correctionBubble = document.getElementById('dynamicCorrectionBubble');
+                  if (!correctionBubble) {
+                    correctionBubble = document.createElement('div');
+                    correctionBubble.id = 'dynamicCorrectionBubble';
+                    correctionBubble.className = 'msg correction';
+                    transcriptBox.insertBefore(correctionBubble, transcriptBox.firstChild);
+                  }
+                  correctionBubble.innerText = `💡 Corrección: "${correctedSentence}"\n📌 Tip: ${grammarTip}`;
+                  displayResponse = fullModelResponse.replace(match[0], "").trim();
+                }
+
+                const isInternalThought = displayResponse.includes("**") || 
+                                          displayResponse.toLowerCase().includes("zeroed in") || 
+                                          displayResponse.toLowerCase().includes("analyzing") || 
+                                          displayResponse.toLowerCase().includes("my current focus");
+
+                if (!isInternalThought && displayResponse.length > 0) {
+                  if (!currentAiMsgElement) {
+                    currentAiMsgElement = appendMessage('ai', displayResponse);
+                  } else {
+                    currentAiMsgElement.innerText = displayResponse;
+                  }
+                }
+              }
+
               if (part.inlineData?.mimeType?.startsWith("audio/pcm")) {
                 playPCM24kHz(base64ToArrayBuffer(part.inlineData.data));
               }
@@ -510,39 +747,28 @@
           }
 
           if (response.serverContent?.turnComplete) {
+            logDebug("Fin del turno de TaKiA.");
             currentState = 'idle';
             statusText.innerText = 'Listo para hablar';
-            if (lastUserQuery) {
-              fetchCleanTranscript(lastUserQuery);
-              lastUserQuery = "";
-            }
+            currentAiMsgElement = null;
+            fullModelResponse = "";
+            const bubble = document.getElementById('dynamicCorrectionBubble');
+            if (bubble) bubble.removeAttribute('id');
           }
         };
 
-        ws.onerror = () => { if (isConnected) { statusText.innerText = 'Error de conexión'; stopCall(); } };
-        ws.onclose = () => { if (isConnected) { statusText.innerText = 'Desconectado'; stopCall(); } };
+        ws.onerror = (err) => { 
+          logDebug("Error WebSocket: " + JSON.stringify(err), true);
+          if (isConnected) { statusText.innerText = 'Error de conexión'; stopCall(); } 
+        };
+        ws.onclose = (ev) => { 
+          logDebug(`WebSocket cerrado (${ev.code})`, true);
+          if (isConnected) { statusText.innerText = 'Desconectado'; stopCall(); } 
+        };
       } catch (e) {
+        logDebug("Excepción al conectar: " + e.message, true);
         statusText.innerText = 'Error al conectar';
         stopCall();
-      }
-    }
-
-    async function fetchCleanTranscript(userText) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${DEFAULT_API_KEY}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: "You are TaKiA, an English tutor. Provide a 1-sentence reply in clean plain text with no formatting or reasoning." }] },
-            contents: [{ parts: [{ text: userText }] }]
-          })
-        });
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) appendMessage('ai', text);
-      } catch (err) {
-        console.error("Error al obtener transcripción:", err);
       }
     }
 
@@ -554,38 +780,45 @@
         talkBtn.classList.add('active-talk', 'talking');
         currentState = 'listening';
         statusText.innerText = '🎙️ TaKiA te escucha...';
+        logDebug("Escuchando tu voz...");
         if (recognition) try { recognition.start(); } catch(e){}
       } else {
         talkBtn.classList.remove('talking', 'active-talk');
         currentState = 'thinking';
         statusText.innerText = '⏳ TaKiA pensando...';
+        logDebug("Procesando audio...");
         if (recognition) try { recognition.stop(); } catch(e){}
       }
     }
 
     async function startAudioInput() {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 128;
-      audioDataArray = new Uint8Array(analyser.frequencyBinCount);
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 128;
+        audioDataArray = new Uint8Array(analyser.frequencyBinCount);
 
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const source = audioCtx.createMediaStreamSource(mediaStream);
-      processor = audioCtx.createScriptProcessor(4096, 1, 1);
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const source = audioCtx.createMediaStreamSource(mediaStream);
+        processor = audioCtx.createScriptProcessor(4096, 1, 1);
 
-      processor.onaudioprocess = (e) => {
-        if (!isMicActive || !ws || ws.readyState !== WebSocket.OPEN) return;
-        const pcm = convertFloat32ToPCM16(e.inputBuffer.getChannelData(0));
-        ws.send(JSON.stringify({ 
-          realtimeInput: { mediaChunks: [{ mimeType: "audio/pcm", data: arrayBufferToBase64(pcm.buffer) }] } 
-        }));
-      };
+        processor.onaudioprocess = (e) => {
+          if (!isMicActive || !ws || ws.readyState !== WebSocket.OPEN) return;
+          const pcm = convertFloat32ToPCM16(e.inputBuffer.getChannelData(0));
+          ws.send(JSON.stringify({ 
+            realtimeInput: { mediaChunks: [{ mimeType: "audio/pcm", data: arrayBufferToBase64(pcm.buffer) }] } 
+          }));
+        };
 
-      source.connect(processor);
-      processor.connect(audioCtx.destination);
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+      } catch (err) {
+        logDebug("Error al activar micrófono: " + err.message, true);
+      }
     }
 
     let nextStartTime = 0;
+
     function playPCM24kHz(buffer) {
       if (!audioCtx) return;
       const int16 = new Int16Array(buffer);
@@ -611,6 +844,7 @@
       talkBtn.classList.remove('talking', 'active-talk');
       if (recognition) try { recognition.stop(); } catch(e){}
       if (ws) { ws.onerror = null; ws.onclose = null; ws.close(); ws = null; }
+      logDebug("Llamada finalizada.");
     }
 
     function convertFloat32ToPCM16(buffer) {
@@ -629,22 +863,14 @@
       return bytes.buffer;
     }
 
-    // VARIABLES DE ANIMACIÓN Y SUAVIZADO (LERP)
-    let step = 0;
-    let outerStep = 0;
-
-    let currentAmplitude = 5;
-    let targetAmplitude = 5;
-
-    let currentGlow = 12;
-    let targetGlow = 12;
-
+    let step = 0, outerStep = 0;
+    let currentAmplitude = 5, targetAmplitude = 5;
+    let currentGlow = 12, targetGlow = 12;
     let currentR = 52, currentG = 211, currentB = 153;
     let targetR = 52, targetG = 211, targetB = 153;
 
     function resizeCanvas() {
       const dpr = window.devicePixelRatio || 1;
-      
       const rect = waveCanvas.getBoundingClientRect();
       waveCanvas.width = rect.width * dpr;
       waveCanvas.height = rect.height * dpr;
@@ -657,7 +883,6 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Dibuja el marco móvil con curvas suaves y respiración orgánica
     function drawSmoothMobileNeorFrame(ctx, x, y, width, height, radius, amplitude, animStep) {
       const wave = Math.sin(animStep * 2) * amplitude;
       const rx = x - wave / 2;
@@ -684,8 +909,7 @@
       outerStep += 0.018;
 
       if (currentState === 'listening') {
-        targetAmplitude = 9;
-        targetGlow = 18;
+        targetAmplitude = 9; targetGlow = 18;
         targetR = 110; targetG = 231; targetB = 183;
       } else if (currentState === 'speaking') {
         let avgVol = 0;
@@ -697,17 +921,13 @@
         targetGlow = 16 + (avgVol / 255) * 18;
         targetR = 0; targetG = 255; targetB = 163;
       } else if (currentState === 'thinking') {
-        targetAmplitude = Math.sin(step * 3) * 2 + 4;
-        targetGlow = 10;
+        targetAmplitude = Math.sin(step * 3) * 2 + 4; targetGlow = 10;
         targetR = 4; targetG = 120; targetB = 87;
       } else {
-        // En espera
-        targetAmplitude = Math.sin(step * 1.8) * 2 + 3.5;
-        targetGlow = 10 + Math.sin(step * 1.8) * 3;
+        targetAmplitude = Math.sin(step * 1.8) * 2 + 3.5; targetGlow = 10;
         targetR = 52; targetG = 211; targetB = 153;
       }
 
-      // Interpolación suave LERP
       const lerpSpeed = 0.06;
       currentAmplitude += (targetAmplitude - currentAmplitude) * lerpSpeed;
       currentGlow += (targetGlow - currentGlow) * lerpSpeed;
@@ -716,8 +936,6 @@
       currentB += (targetB - currentB) * lerpSpeed;
 
       const activeColor = `rgb(${Math.round(currentR)}, ${Math.round(currentG)}, ${Math.round(currentB)})`;
-
-      // 1. Renderizar Aro del Botón Central
       const width = waveCanvas.getBoundingClientRect().width;
       const height = waveCanvas.getBoundingClientRect().height;
       const centerX = width / 2;
@@ -743,7 +961,6 @@
         const angle = (i / points) * Math.PI * 2;
         const wave = Math.sin(angle * waveCount + step) * currentAmplitude;
         const r = baseRadius + wave;
-
         const x = centerX + Math.cos(angle) * r;
         const y = centerY + Math.sin(angle) * r;
 
@@ -753,13 +970,11 @@
       ctx.closePath();
       ctx.stroke();
 
-      // 2. Renderizar Aro Exterior Adaptativo
       const oWidth = window.innerWidth;
       const oHeight = window.innerHeight;
       const cardRect = appCard.getBoundingClientRect();
 
       outerCtx.clearRect(0, 0, oWidth, oHeight);
-
       outerCtx.shadowBlur = currentGlow * 1.1;
       outerCtx.shadowColor = activeColor;
       outerCtx.lineWidth = 2.5;
@@ -768,7 +983,6 @@
       outerCtx.lineJoin = 'round';
 
       if (window.innerWidth >= 769) {
-        // EN PC: Circulo Fluido
         const oCenterX = cardRect.left + cardRect.width / 2;
         const oCenterY = cardRect.top + cardRect.height / 2;
         const cardRadius = appCard.offsetWidth / 2;
@@ -780,7 +994,6 @@
           const angle = (i / points) * Math.PI * 2;
           const wave = Math.sin(angle * outerWaveCount - outerStep) * (currentAmplitude * 0.7);
           const r = outerBaseRadius + wave;
-
           const x = oCenterX + Math.cos(angle) * r;
           const y = oCenterY + Math.sin(angle) * r;
 
@@ -790,14 +1003,12 @@
         outerCtx.closePath();
         outerCtx.stroke();
       } else {
-        // EN MÓVILES: Esquinas curvadas fluidas perfectas sin bordes quebrados
         const margin = 10;
         const x = cardRect.left - margin;
         const y = cardRect.top - margin;
         const w = cardRect.width + (margin * 2);
         const h = cardRect.height + (margin * 2);
         const r = 36; 
-
         drawSmoothMobileNeorFrame(outerCtx, x, y, w, h, r, currentAmplitude * 0.6, outerStep);
       }
 
